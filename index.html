@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statistical Test Selector</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #14b8a6;
+            --success: #10b981;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #0f172a;
+            --muted: #64748b;
+        }
+
+        .dark-mode {
+            --primary: #4ade80; /* A vibrant green for dark mode */
+            --success: #86efac;
+            --bg: #1f2937; /* Dark gray background */
+            --card: #374151; /* Slightly lighter card background */
+            --text: #ffffff; /* Light text */
+            --muted: #e0e0e0; /* Muted text for dark mode */
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, system-ui, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center; /* Center horizontally */
+            align-items: center;   /* Center vertically */
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px; /* Overall padding for the screen content */
+            /* Removed flex-direction: column as not needed for centering a single item */
+        }
+
+        .main-container {
+            width: 100%;
+            max-width: 480px; /* Bring back max-width for readability */
+            background: none; /* Keep background plain */
+            padding: 24px;   /* Bring back padding for internal spacing */
+            border-radius: 0; /* No rounded corners for plain look */
+            /* Removed flex-grow: 1; */ /* Not needed when centered */
+            /* Removed display: flex; flex-direction: column; justify-content: flex-start; as children of main-container will be block-level steps */
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0;
+            background-color: var(--primary);
+            border-radius: 4px;
+            transition: width 0.3s ease-in-out;
+        }
+
+        .step { display: none; }
+        .step.active { display: block; animation: fadeIn 0.4s ease-out; }
+
+        .welcome-screen { text-align: center; padding: 20px 0; }
+        .welcome-screen h1 { font-size: 1.8rem; color: var(--primary); margin-bottom: 10px; }
+        .welcome-icon { font-size: 4rem; margin-bottom: 20px; color: var(--primary); }
+
+        h2 { margin-top: 0; font-size: 1.4rem; color: var(--primary); }
+        p { color: var(--muted); margin-bottom: 20px; }
+
+        .btn-grid { display: flex; flex-direction: column; gap: 12px; }
+
+        button {
+            width: 100%;
+            padding: 16px;
+            font-size: 1rem;
+            font-weight: 500;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: var(--card); /* Use card variable */
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            color: var(--text); /* Added for theme adaptation */
+        }
+
+        button:hover {
+            border-color: var(--primary);
+            background-color: var(--bg); /* Use bg variable for a subtle change */
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        /* Specific style for Start Button */
+        .start-btn {
+            background-color: var(--primary);
+            color: white; /* Keep white for contrast with default primary, but consider dynamic text color */
+            text-align: center;
+            font-size: 1.2rem;
+            margin-top: 20px;
+            border: none;
+        }
+        .start-btn:hover {
+            background-color: var(--primary); /* Keep primary for hover */
+            filter: brightness(1.1); /* Darken/lighten based on current primary */
+            color: white;
+        }
+
+        /* Styling for the Reset Button */
+        .reset-btn {
+            background-color: var(--primary); /* Same as Start Button */
+            color: white; /* Same as Start Button */
+            border: none; /* Same as Start Button */
+            text-align: center;
+            margin-top: 20px;
+            font-size: 1rem; /* Slightly smaller than Start Button */
+        }
+        .reset-btn:hover {
+            background-color: var(--primary); /* Keep primary for hover */
+            filter: brightness(1.1); /* Same hover effect as Start Button */
+            color: white;
+        }
+
+        /* Specific style for Back Link */
+        #backNav button {
+            width: auto;
+            padding: 0;
+            margin: 0 0 15px 0;
+            border: none;
+            background: transparent;
+            color: var(--muted);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+        }
+        #backNav button:hover { color: var(--primary); background: transparent; }
+
+        button small {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        .result-card {
+            text-align: center;
+            padding: 30px;
+            background: var(--bg); /* Changed to blend with main background */
+            /* border: 2px dashed var(--success); */ /* Removed */
+            border-radius: 15px;
+        }
+
+        #testName {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--success);
+            margin: 15px 0;
+        }
+
+        #testLink {
+            font-size: 0.9rem;
+            font-weight: 500;
+            /* color: var(--primary); */ /* Removed as styling the div, not the link */
+        }
+        #testLink a { /* New rule to target the link specifically */
+            color: var(--primary); /* Ensure link color adapts to theme */
+            /* text-decoration: none; */ /* Removed to make it always underlined */
+        }
+        #testLink a:hover { /* New rule for hover effect */
+            text-decoration: underline;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @media (max-width: 400px) {
+            body {
+                padding: 10px 15px; /* Adjust padding for smaller screens */
+            }
+            .result-card {
+                padding: 15px; /* Reduce internal padding for smaller screens */
+            }
+        }
+
+        /* Breadcrumbs Styles */
+        .breadcrumbs-container {
+            margin-bottom: 15px;
+            font-size: 0.85rem;
+            color: var(--muted);
+            display: flex; /* Use flexbox for horizontal layout */
+            flex-wrap: wrap; /* Allow wrapping on small screens */
+            align-items: center;
+        }
+
+        .breadcrumbs-container span {
+            color: var(--primary); /* Highlight active/selected breadcrumb part */
+            font-weight: 500;
+            white-space: nowrap; /* Prevent individual breadcrumb parts from breaking */
+        }
+
+        .breadcrumbs-container .separator {
+            margin: 0 5px;
+            color: var(--muted);
+            white-space: nowrap;
+        }
+        /* New Styles for Assumption Checklist */
+        .assumption-checklist {
+            background-color: var(--card); /* Match card background */
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        .assumption-checklist ul {
+            list-style: none; /* Remove default bullet points */
+            padding: 0;
+            margin: 0;
+        }
+
+        .assumption-checklist li {
+            margin-bottom: 10px;
+            display: flex; /* Align checkbox and text */
+            align-items: flex-start;
+        }
+
+        .assumption-checklist li:last-child {
+            margin-bottom: 0; /* No margin after the last item */
+        }
+
+        .assumption-checklist label {
+            display: flex;
+            align-items: flex-start;
+            cursor: pointer;
+            color: var(--text); /* Use text variable */
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+
+        .assumption-checklist input[type="checkbox"] {
+            margin-right: 10px;
+            margin-top: 3px; /* Align checkbox visually with text */
+            flex-shrink: 0; /* Prevent checkbox from shrinking */
+            width: 18px; /* Custom size for checkbox */
+            height: 18px; /* Custom size for checkbox */
+            accent-color: var(--primary); /* Use primary color for checked state */
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    <button id="themeToggle" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--muted);" aria-label="Toggle dark mode">🌙</button>
+    <div class="progress-bar">
+        <div class="progress-bar-fill"></div>
+    </div>
+    <div id="startStep" class="step active">
+        <div class="welcome-screen">
+            <div class="welcome-icon">📊</div>
+            <h1>StatSelector</h1>
+            <p>Find the right statistical test for your research in seconds.</p>
+            <p style="font-size: 0.8rem; color: var(--muted); margin-top: 20px;">
+                Created by John Kenneth T. Meradios<br>
+                Contact: <a href="mailto:meradiosjohnkennetht200297@gmail.com" style="color: var(--primary); text-decoration: none;">meradiosjohnkennetht200297@gmail.com</a>
+            </p>
+            <button class="start-btn" onclick="handleStep('start', 'aimStep')">
+                Get Started →
+            </button>
+        </div>
+    </div>
+
+    <div id="backNav" style="display: none;">
+        <div id="breadcrumbs" class="breadcrumbs-container" style="margin-bottom: 15px; font-size: 0.9rem; color: var(--muted);"></div>
+        <button onclick="goBack()"><span>←</span> Back</button>
+    </div>
+
+    <div id="aimStep" class="step">
+        <h2>What is your Aim?</h2>
+        <p>Select the primary goal of your analysis.</p>
+        <div class="btn-grid">
+            <button onclick="handleStep('compare', 'compareGroupsStep')">Compare Groups<small>Looking for differences between means/proportions</small></button>
+            <button onclick="handleStep('relate', 'relateStep')">Find Relationship<small>Associations or correlations between variables</small></button>
+            <button onclick="handleStep('predict', 'predictStep')">Predict Outcome<small>Using variables to forecast a value</small></button>
+        </div>
+    </div>
+
+    <div id="compareGroupsStep" class="step">
+        <h2>How many groups?</h2>
+        <div class="btn-grid">
+            <button onclick="handleStep('1', 'comp1DataType')">1 Group <small>vs. a known population value</small></button>
+            <button onclick="handleStep('2', 'compRelStep')">2 Groups</button>
+            <button onclick="handleStep('3plus', 'compRelStep')">3 or more Groups</button>
+        </div>
+    </div>
+
+    <div id="comp1DataType" class="step">
+        <h2>Data Type (1 Group)</h2>
+        <div class="btn-grid">
+            <button onclick="handleStep('numeric', 'assumptionsStep')">Numeric (Interval/Ratio)</button>
+            <button onclick="handleFinal('binary')">Binary / Dichotomous</button>
+            <button onclick="handleFinal('categorical')">Categorical (3+ categories)</button>
+        </div>
+    </div>
+
+    <div id="compRelStep" class="step">
+        <h2>Group Connection</h2>
+        <p>How are the participants in your groups related?</p>
+        <div class="btn-grid">
+            <button onclick="handleStep('independent', 'compDataType')">Independent<small>Different people in each group</small></button>
+            <button onclick="handleStep('dependent', 'compDataType')">Paired / Dependent<small>Same people measured repeatedly</small></button>
+        </div>
+    </div>
+
+    <div id="compDataType" class="step">
+        <h2>Data Type</h2>
+        <div class="btn-grid">
+            <button onclick="handleStep('numeric', 'assumptionsStep')">Numeric</button>
+            <button onclick="handleCategoricalData()">Categorical</button>
+        </div>
+    </div>
+
+    <div id="relateStep" class="step">
+        <h2>Variables involved?</h2>
+        <div class="btn-grid">
+            <button onclick="handleStep('numeric', 'assumptionsStep')">Both Numeric</button>
+            <button onclick="handleStep('categorical', 'sampleSizeStep')">Both Categorical</button>
+            <button onclick="handleFinal('binaryNumeric')">Binary + Numeric</button>
+        </div>
+    </div>
+
+    <div id="predictStep" class="step">
+        <h2>Outcome Variable Type?</h2>
+        <div class="btn-grid">
+            <button onclick="handleStep('numeric', 'predictorCountStep')">Numeric (Continuous)</button>
+            <button onclick="handleStep('binary', 'predictorCountStep')">Binary (Yes/No)</button>
+            <button onclick="handlePredictStep('nominal')">Nominal (3+ categories)</button>
+        </div>
+    </div>
+
+    <div id="predictorCountStep" class="step">
+        <h2>How many predictors?</h2>
+        <div class="btn-grid">
+            <button onclick="handlePredictStep('simple')">1 Predictor</button>
+            <button onclick="handlePredictStep('multiple')">2 or more Predictors</button>
+        </div>
+    </div>
+
+    <div id="sampleSizeStep" class="step">
+        <h2>Sample Size Check</h2>
+        <div class="btn-grid">
+            <button onclick="handleFinal('na')">Standard (All cells ≥ 5)</button>
+            <button onclick="handleFinal('small')">Small Sample (Any cell < 5)</button>
+        </div>
+    </div>
+
+    <div id="assumptionsStep" class="step">
+        <h2>Assumptions</h2>
+        <p>To proceed, your data must meet all the following assumptions. Please check each one you can confirm.</p>
+        <div class="assumption-checklist" id="assumptionsChecklistContainer">
+            <!-- Dynamic checklist items will be inserted here by JavaScript -->
+            <ul id="assumptionsList"></ul>
+        </div>
+        <div class="btn-grid">
+            <button onclick="handleAssumptionsCheck()" class="start-btn">Continue →</button>
+        </div>
+    </div>
+
+    <div id="predictAssumptionsStep" class="step">
+        <h2>Assumptions for Prediction</h2>
+        <p>To use this regression model, your data should meet the following assumptions. Please check each one you can confirm.</p>
+        <div class="assumption-checklist" id="predictAssumptionsChecklistContainer">
+            <ul id="predictAssumptionsList"></ul>
+        </div>
+        <div class="btn-grid">
+            <button onclick="handlePredictAssumptionsCheck()" class="start-btn">Continue →</button>
+        </div>
+    </div>
+
+    <div id="alternativeNeededStep" class="step">
+        <div class="result-card">
+            <h2>Alternative Test Required</h2>
+            <p style="margin-top: 20px;">Your data does not meet the required assumptions for this statistical test.</p>
+            <p>An alternative test (e.g., Quantile Regression, etc.) is needed. Guidance for this alternative is not yet included in StatSelector but may be added in a future update.</p>
+            <button onclick="resetWizard()" class="reset-btn">Start Over</button>
+        </div>
+    </div>
+
+    <div id="resultStep" class="step">
+        <div class="result-card">
+            <h2>Recommended Test:</h2>
+            <div id="testName"></div>
+            <div id="testLink" style="margin-top: 10px;"></div>
+            <div id="interpretation-container" style="margin-top: 20px; text-align: left; display: none;">
+                <h3>APA Interpretation Guide:</h3>
+                <textarea id="interpretationText" rows="8" style="width: 100%; margin-bottom: 10px;"></textarea>
+                <button id="copyBtn" onclick="copyInterpretation()" style="width: auto; padding: 8px 16px; background: var(--primary); color: white; border: none; text-align: center;">Copy Text</button>
+                <button id="exportBtn" onclick="exportResults()" style="width: auto; padding: 8px 16px; background: var(--primary); color: white; border: none; text-align: center; margin-left: 10px;">Export Results</button>
+            </div>
+            <p style="font-size: 0.8rem; color: var(--muted); margin-top: 15px;">Note: This tool is a guide. For complex research, always consult with a qualified statistician.</p>
+            <button onclick="resetWizard()" class="reset-btn">Start Over</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const statisticalTestMap = {
+        "compare_1_numeric_yes": { name: "One-Sample t-Test", link: "https://statistics.laerd.com/spss-tutorials/one-sample-t-test-using-spss-statistics.php", interpretation: "A one-sample t-test was conducted to determine whether the mean [variable] differed from [test value]. The result showed that the mean (M = [mean], SD = [SD]) was [significantly / not significantly] different, t([df]) = [t], p = [p]." },
+        "compare_1_numeric_no": { name: "Wilcoxon Signed-Rank Test (1-sample)", link: "https://statistics.laerd.com/spss-tutorials/wilcoxon-signed-rank-test-using-spss-statistics.php", interpretation: "A Wilcoxon signed-rank test was conducted to determine whether the [mean rank] of [variable] differed from [test value]. The result showed that the mean rank was [significantly / not significantly] different, Z = [Z value], p = [p value]." },
+        "compare_1_binary": { name: "Exact Binomial Test", link: "https://statistics.laerd.com/spss-tutorials/binomial-test-using-spss-statistics.php", interpretation: "A binomial test was conducted to determine whether the observed proportion of [category 1] ([proportion1]) differed from an expected proportion of [expected proportion]. The result showed that the proportion was [significantly / not significantly] different, p = [p value]." },
+        "compare_1_categorical": { name: "Chi-Square Goodness of Fit", link: "https://statistics.laerd.com/spss-tutorials/chi-square-goodness-of-fit-test-in-spss-statistics.php", interpretation: "A chi-square goodness-of-fit test was conducted to determine whether the observed distribution of [variable] differed from the expected distribution. The result showed that the distribution was [significantly / not significantly] different, χ²([df]) = [chi-square value], p = [p value]." },
+        "compare_2_independent_numeric_yes": { name: "Independent t-Test", link: "https://statistics.laerd.com/spss-tutorials/independent-t-test-using-spss-statistics.php", interpretation: "An independent samples t-test was conducted to determine whether the mean [variable] differed between [group 1] (M = [mean1], SD = [SD1]) and [group 2] (M = [mean2], SD = [SD2]). The result showed that the means were [significantly / not significantly] different, t([df]) = [t value], p = [p value]." },
+        "compare_2_independent_numeric_no": { name: "Mann–Whitney U Test", link: "https://statistics.laerd.com/spss-tutorials/mann-whitney-u-test-using-spss-statistics.php", interpretation: "A Mann–Whitney U test was conducted to compare [variable] between [group 1] (mean rank = [mean rank 1]) and [group 2] (mean rank = [mean rank 2]). The result showed that the distributions were [significantly / not significantly] different, U = [U value], p = [p value]." },
+        "compare_2_independent_categorical_na": { name: "Chi-Square Test of Independence", link: "https://statistics.laerd.com/spss-tutorials/chi-square-test-for-association-using-spss-statistics.php", interpretation: "A chi-square test of independence was conducted to examine the association between [variable] and [group 1] vs [group 2]. The result showed that the variables were [significantly / not significantly] associated, χ²(1) = [chi-square value], p = [p value]." },
+        "compare_2_independent_categorical_small": { name: "Fisher’s Exact Test", link: "https://ezspss.com/how-to-do-fisher-exact-test-in-spss/", interpretation: "A Fisher’s exact test was conducted to examine the association between [variable] and [group 1] vs [group 2]. The result showed that the variables were [significantly / not significantly] associated, p = [p value]." },
+        "compare_2_dependent_numeric_yes": { name: "Paired t-Test", link: "https://statistics.laerd.com/spss-tutorials/dependent-t-test-using-spss-statistics.php", interpretation: "A paired sample t-test was conducted to compare [variable] between [condition 1] (M = [mean1], SD = [SD1]) and [condition 2] (M = [mean2], SD = [SD2]). The result showed that the means were [significantly / not significantly] different, t([df]) = [t value], p = [p value]." },
+        "compare_2_dependent_numeric_no": { name: "Wilcoxon Signed-Rank Test", link: "https://statistics.laerd.com/spss-tutorials/wilcoxon-signed-rank-test-using-spss-statistics.php", interpretation: "A Wilcoxon signed-rank test was conducted to compare [variable] between [condition 1] (mean rank = [mean rank 1]) and [condition 2] (mean rank = [mean rank 2]). The result showed that the distributions were [significantly / not significantly] different, Z = [Z value], p = [p value]." },
+        "compare_2_dependent_categorical": { name: "McNemar Test", link: "https://statistics.laerd.com/spss-tutorials/mcnemars-test-using-spss-statistics.php", interpretation: "A McNemar test was conducted to examine changes in [variable] between [condition 1] (proportion = [proportion1]) and [condition 2] (proportion = [proportion2]). The result showed that the proportions were [significantly / not significantly] different, χ²([df]) = [chi-square value], p = [p value]." },
+        "compare_3plus_independent_numeric_yes": { name: "One-Way ANOVA", link: "https://statistics.laerd.com/spss-tutorials/one-way-anova-using-spss-statistics.php", interpretation: "A one-way ANOVA was conducted to compare [variable] across [group 1] (M = [mean1], SD = [SD1]), [group 2] (M = [mean2], SD = [SD2]), and [group 3] (M = [mean3], SD = [SD3]). The result showed a [significant / not significant] difference among groups, F([df between], [df within]) = [F value], p = [p value].\nOptional post-hoc sentence (if significant):\nPost-hoc comparisons using [Tukey / Bonferroni] indicated that [group X] differed significantly from [group Y]." },
+        "compare_3plus_independent_numeric_no": { name: "Kruskal–Wallis Test", link: "https://statistics.laerd.com/spss-tutorials/kruskal-wallis-h-test-using-spss-statistics.php", interpretation: "A Kruskal–Wallis test was conducted to compare [variable] across [group 1] (mean rank = [rank1]), [group 2] (mean rank = [rank2]), and [group 3] (mean rank = [rank3]). The result showed a [significant / not significant] difference among groups, H([df]) = [H value], p = [p value].\nOptional post-hoc sentence (if significant):\nPost-hoc pairwise comparisons using [Dunn’s test / Bonferroni correction] indicated significant differences between [group X] and [group Y]." },
+        "compare_3plus_dependent_numeric_yes": { name: "Repeated-Measures ANOVA", link: "https://statistics.laerd.com/spss-tutorials/one-way-anova-repeated-measures-using-spss-statistics.php", interpretation: "A one-way repeated measures ANOVA was conducted to compare [variable] across [condition 1] (M = [mean1], SD = [SD1]), [condition 2] (M = [mean2], SD = [SD2]), and [condition 3] (M = [mean3], SD = [SD3]). The result showed a [significant / not significant] difference among conditions, F([df between], [df within]) = [F value], p = [p value].\nOptional post-hoc sentence (if significant):\nPost-hoc comparisons using [Tukey / Bonferroni] indicated that [condition X] differed significantly from [condition Y]." },
+        "compare_3plus_dependent_numeric_no": { name: "Friedman Test", link: "https://statistics.laerd.com/spss-tutorials/friedman-test-using-spss-statistics.php", interpretation: "A Friedman test was conducted to compare [variable] across [condition 1] (mean rank = [rank1]), [condition 2] (mean rank = [rank2]), and [condition 3] (mean rank = [rank3]). The result showed a [significant / not significant] difference among conditions, χ²([df]) = [chi-square value], p = [p value].\nOptional post-hoc sentence (if significant):\nPost-hoc pairwise comparisons using [Wilcoxon signed-rank test with Bonferroni correction] indicated significant differences between [condition X] and [condition Y]." },
+        "compare_3plus_dependent_categorical": { name: "Cochran’s Q Test", link: "https://statistics.laerd.com/spss-tutorials/cochrans-q-test-in-spss-statistics.php", interpretation: "A Cochran’s Q test was conducted to compare [variable] across [condition 1] (proportion = [p1]), [condition 2] (proportion = [p2]), and [condition 3] (proportion = [p3]). The result showed a [significant / not significant] difference among conditions, Q([df]) = [Q value], p = [p value].\nOptional post-hoc sentence (if significant):\nPost-hoc pairwise comparisons using [McNemar test with Bonferroni correction] indicated that [condition X] differed significantly from [condition Y]." },
+        "compare_3plus_independent_categorical_na": { name: "Chi-Square Test of Independence", link: "https://statistics.laerd.com/spss-tutorials/chi-square-test-for-association-using-spss-statistics.php", interpretation: "A chi-square test of independence was conducted to examine the association between [variable] and [groups]. The result showed that the variables were [significantly / not significantly] associated, χ²([df]) = [chi-square value], p = [p value]." },
+        "compare_3plus_independent_categorical_small": { name: "Fisher’s Exact Test", link: "https://ezspss.com/how-to-do-fisher-exact-test-in-spss/", interpretation: "A Fisher’s exact test was conducted to examine the association between [variable] and [groups]. The result showed that the variables were [significantly / not significantly] associated, p = [p value]." },
+        "relate_numeric_yes": { name: "Pearson Correlation (r)", link: "https://statistics.laerd.com/spss-tutorials/pearsons-product-moment-correlation-using-spss-statistics.php", interpretation: "A Pearson correlation was conducted to examine the relationship between [variable 1] and [variable 2]. The result showed a [significant / not significant] correlation, r([df]) = [r value], p = [p value].\nOptional interpretation sentence (if significant):\nThis indicates that [variable 1] and [variable 2] are [positively / negatively] related." },
+        "relate_numeric_no": { name: "Spearman’s Rho (ρ)", link: "https://statistics.laerd.com/spss-tutorials/spearmans-rank-order-correlation-using-spss-statistics.php", interpretation: "A Spearman correlation was conducted to examine the relationship between [variable 1] and [variable 2]. The result showed a [significant / not significant] correlation, ρ([df]) = [rho value], p = [p value].\nOptional interpretation sentence (if significant):\nThis indicates that [variable 1] and [variable 2] are [positively / negatively] related." },
+        "relate_binaryNumeric": { name: "Point-Biserial Correlation", link: "https://statistics.laerd.com/spss-tutorials/point-biserial-correlation-using-spss-statistics.php", interpretation: "A point-biserial correlation was conducted to examine the relationship between [binary variable] and [numeric variable]. The result showed a [significant / not significant] correlation, r([df]) = [r value], p = [p value].\nOptional interpretation sentence (if significant):\nThis indicates that [numeric variable] tends to be [higher / lower] for [binary group = 1] compared to [binary group = 0]." },
+        "relate_categorical_na": { name: "Chi-Square Test of Independence", link: "https://statistics.laerd.com/spss-tutorials/chi-square-test-for-association-using-spss-statistics.php", interpretation: "A chi-square test of independence was conducted to examine the association between [variable] and [groups]. The result showed that the variables were [significantly / not significantly] associated, χ²([df]) = [chi-square value], p = [p value]." },
+        "relate_categorical_small": { name: "Fisher’s Exact Test", link: "https://ezspss.com/how-to-do-fisher-exact-test-in-spss/", interpretation: "A Fisher’s exact test was conducted to examine the association between [variable] and [groups]. The result showed that the variables were [significantly / not significantly] associated, p = [p value]." },
+        "predict_numeric_simple_assumptions_met": { name: "Simple Linear Regression", link: "https://statistics.laerd.com/spss-tutorials/linear-regression-using-spss-statistics.php", interpretation: "A simple linear regression was conducted to examine whether [predictor variable] significantly predicted [outcome variable]. The model was [significant / not significant], F([df1], [df2]) = [F value], p = [p value], and explained [R² value] of the variance in [outcome variable]. The regression coefficient for [predictor variable] was [b value], t([df]) = [t value], p = [p value].\nOptional interpretation sentence (if significant):\nThis indicates that higher/lower [predictor variable] is associated with higher/lower [outcome variable]." },
+        "predict_numeric_multiple_assumptions_met": { name: "Multiple Linear Regression", link: "https://statistics.laerd.com/spss-tutorials/multiple-regression-using-spss-statistics.php", interpretation: "A multiple linear regression was conducted to examine whether [predictor variable 1], [predictor variable 2], … significantly predicted [outcome variable]. The model was [significant / not significant], F([df1], [df2]) = [F value], p = [p value], and explained [R² value] of the variance in [outcome variable]. Regression coefficients for the predictors were [b1 value], [b2 value], …, with corresponding t([df]) = [t values] and p = [p values].\nOptional interpretation sentence (if significant):\nThis indicates that [predictor variable X] is positively/negatively associated with [outcome variable], while controlling for other predictors in the model." },
+        "predict_binary_simple_assumptions_met": { name: "Simple Logistic Regression", link: "https://statistics.laerd.com/spss-tutorials/binomial-logistic-regression-using-spss-statistics.php", interpretation: "A logistic regression was conducted to examine whether [predictor variable] significantly predicted the likelihood of [outcome variable]. The model was [significant / not significant], χ²([df]) = [chi-square value], p = [p value], and explained [Nagelkerke R² = value] of the variance. The odds ratio for [predictor variable] was [OR value], 95% CI = [lower, upper], p = [p value].\nOptional interpretation sentence (if significant):\nThis indicates that higher/lower [predictor variable] is associated with increased/decreased odds of [outcome variable]." },
+        "predict_binary_multiple_assumptions_met": { name: "Multiple Logistic Regression", link: "https://statistics.laerd.com/spss-tutorials/multiple-regression-using-spss-statistics.php", interpretation: "A multiple logistic regression was conducted to examine whether [predictor variable 1], [predictor variable 2], … significantly predicted the likelihood of [outcome variable]. The model was [significant / not significant], χ²([df]) = [chi-square value], p = [p value], and explained [Nagelkerke R² = value] of the variance. Odds ratios for the predictors were [OR1, OR2, …], 95% CI = [lower1–upper1, lower2–upper2, …], with p = [p values].\nOptional interpretation sentence (if significant):\nThis indicates that [predictor variable X] is positively/negatively associated with the odds of [outcome variable], while controlling for other predictors." },
+        "predict_nominal_assumptions_met": { name: "Multinomial Logistic Regression", link: "https://statistics.laerd.com/spss-tutorials/multinomial-logistic-regression-using-spss-statistics.php", interpretation: "A multinomial logistic regression was conducted to examine whether [predictor variable 1], [predictor variable 2], … significantly predicted membership in [outcome variable with multiple categories]. The model was [significant / not significant], χ²([df]) = [chi-square value], p = [p value], and explained [Nagelkerke R² = value] of the variance. Odds ratios for the predictors were [OR1, OR2, …], 95% CI = [lower1–upper1, lower2–upper2, …], with p = [p values].\nOptional interpretation sentence (if significant):\nThis indicates that [predictor variable X] is positively/negatively associated with the likelihood of being in [category Y of outcome], while controlling for other predictors." }
+    };
+
+    const assumptionsMap = {
+        "compare_1_numeric": [
+            "The variable is continuous (interval or ratio level).",
+            "The observations are independent of one another.",
+            "The data are approximately normally distributed.",
+            "There are no significant outliers in the data."
+        ],
+        "compare_2_independent_numeric": [
+            "The dependent variable is continuous.",
+            "The independent variable consists of two categorical, unrelated groups.",
+            "The observations are independent (no relationship between subjects in the two groups).",
+            "The dependent variable is approximately normally distributed for each group.",
+            "There is homogeneity of variances (the variances are roughly equal across both groups).",
+            "There are no significant outliers in either group."
+        ],
+        "compare_2_dependent_numeric": [
+            "The dependent variable is continuous.",
+            "The independent variable consists of two related groups or matched pairs.",
+            "The distribution of the differences between the paired values is approximately normal.",
+            "There are no significant outliers in the difference scores."
+        ],
+        "compare_3plus_independent_numeric": [
+            "The dependent variable is continuous.",
+            "The independent variable consists of three or more categorical, unrelated groups.",
+            "The observations are independent.",
+            "The dependent variable is approximately normally distributed for each group.",
+            "There is homogeneity of variances (the variance is roughly equal across all groups).",
+            "There are no significant outliers in any group."
+        ],
+        "compare_3plus_dependent_numeric": [
+            "The dependent variable is continuous.",
+            "The independent variable consists of three or more related groups.",
+            "The dependent variable is approximately normally distributed for each group/time point.",
+            "There are no significant outliers in any group/time point.",
+            "Sphericity: The variances of the differences between all combinations of related groups are equal."
+        ],
+        "relate_numeric": [
+            "Both variables are continuous.",
+            "The variables consist of paired observations.",
+            "There is a linear relationship between the two variables.",
+            "There are no significant outliers."
+        ]
+    };
+
+    const predictAssumptionsMap = {
+        "predict_numeric_simple": [
+            "There is a linear relationship between the predictor and outcome variable.",
+            "The prediction errors (residuals) are approximately normally distributed.",
+            "The residuals have constant variance across all levels of the predictor variable (Homoscedasticity).",
+            "The observations are independent."
+        ],
+        "predict_numeric_multiple": [
+            "There is a linear relationship between the predictors and the outcome variable.",
+            "The prediction errors (residuals) are approximately normally distributed.",
+            "The residuals have constant variance (Homoscedasticity).",
+            "Predictor variables are not highly correlated with each other (no multicollinearity).",
+            "The observations are independent."
+        ],
+        "predict_binary_simple": [
+            "The outcome variable is binary (e.g., Yes/No, 0/1).",
+            "There is a linear relationship between the predictor variable and the log-odds of the outcome.",
+            "There are no influential data points (outliers) that have an excessive impact on the model.",
+            "The observations are independent."
+        ],
+        "predict_binary_multiple": [
+            "The outcome variable is binary.",
+            "There is a linear relationship between the predictor variables and the log-odds of the outcome.",
+            "There is no strong correlation among predictor variables (no multicollinearity).",
+            "There are no influential data points (outliers).",
+            "The observations are independent."
+        ],
+        "predict_nominal": [ // for Multinomial Logistic Regression
+            "The outcome variable is nominal with more than two categories.",
+            "There is no strong correlation among predictor variables (no multicollinearity).",
+            "There is a linear relationship between the predictor variables and the log-odds of the outcome categories.",
+            "The observations are independent."
+        ]
+    };
+
+    const progressMap = {
+        'startStep': 0,
+        'aimStep': 20,
+        'compareGroupsStep': 40,
+        'relateStep': 40,
+        'predictStep': 40,
+        'comp1DataType': 60,
+        'compRelStep': 60,
+        'predictorCountStep': 60,
+        'compDataType': 80,
+        'sampleSizeStep': 80,
+        'assumptionsStep': 80,
+        'predictAssumptionsStep': 80, // New
+        'alternativeNeededStep': 100, // New
+        'resultStep': 100
+    };
+
+    const questionMap = {
+        'aimStep': 'What is your Aim?',
+        'compareGroupsStep': 'How many groups?',
+        'comp1DataType': 'Data Type (1 Group)',
+        'compRelStep': 'Group Connection',
+        'compDataType': 'Data Type',
+        'relateStep': 'Variables involved?',
+        'predictStep': 'Outcome Variable Type?',
+        'predictorCountStep': 'How many predictors?',
+        'sampleSizeStep': 'Sample Size Check',
+        'assumptionsStep': 'Assumptions'
+    };
+
+    const answerMap = {
+        'compare': 'Compare Groups',
+        'relate': 'Find Relationship',
+        'predict': 'Predict Outcome',
+        '1': '1 Group',
+        '2': '2 Groups',
+        '3plus': '3 or more Groups',
+        'numeric': 'Numeric',
+        'binary': 'Binary / Dichotomous',
+        'categorical': 'Categorical',
+        'independent': 'Independent',
+        'dependent': 'Paired / Dependent',
+        'binaryNumeric': 'Binary + Numeric',
+        'nominal': 'Nominal (3+ categories)',
+        'simple': '1 Predictor',
+        'multiple': '2 or more Predictors',
+        'na': 'Standard (All cells ≥ 5)',
+        'small': 'Small Sample (Any cell < 5)',
+        'yes': 'Yes (Parametric)',
+        'no': 'No (Non-Parametric)'
+    };
+
+    let currentPath = [];
+    let historyStack = ['startStep'];
+
+    function handleStep(value, nextStepId) {
+        // FIX: Don't add 'start' to our data path key
+        if (value !== 'start') {
+            currentPath.push(value);
+        }
+        historyStack.push(nextStepId);
+        updateUI();
+    }
+
+    function handleFinal(value) {
+        currentPath.push(value);
+        const key = currentPath.join('_');
+        const testInfo = statisticalTestMap[key];
+
+        historyStack.push('resultStep');
+        updateUI();
+
+        const testNameEl = document.getElementById('testName');
+        const testLinkEl = document.getElementById('testLink');
+        const interpretationContainer = document.getElementById('interpretation-container');
+        const interpretationTextEl = document.getElementById('interpretationText');
+
+        if (testInfo) {
+            testNameEl.innerText = testInfo.name;
+            testLinkEl.innerHTML = `<a href="${testInfo.link}" target="_blank">View SPSS Guide for ${testInfo.name}</a>`;
+
+            if (testInfo.interpretation) {
+                interpretationTextEl.value = testInfo.interpretation;
+                interpretationContainer.style.display = 'block';
+            } else {
+                interpretationContainer.style.display = 'none';
+            }
+        } else {
+            testNameEl.innerText = "Test not found. Check your logic.";
+            testLinkEl.innerHTML = "";
+            interpretationContainer.style.display = 'none';
+        }
+    }
+
+    function handleCategoricalData() {
+        if (currentPath.includes('independent')) {
+            handleStep('categorical', 'sampleSizeStep');
+        }
+        else {
+            handleFinal('categorical');
+        }
+    }
+
+    function handlePredictStep(value) {
+        currentPath.push(value);
+        historyStack.push('predictAssumptionsStep');
+        updateUI();
+    }
+
+    function goBack() {
+        if (historyStack.length > 1) {
+            const removedStep = historyStack.pop();
+            // Only pop from path if we weren't just going back from the first question
+            if (historyStack[historyStack.length - 1] !== 'startStep') {
+                currentPath.pop();
+            }
+            updateUI();
+        }
+    }
+
+    function updateUI() {
+        document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+        const currentStepId = historyStack[historyStack.length - 1];
+
+        // Specific logic for assumptionsStep
+        if (currentStepId === 'assumptionsStep') {
+            const assumptionsListEl = document.getElementById('assumptionsList');
+            assumptionsListEl.innerHTML = ''; // Clear previous assumptions
+
+            // Generate the key for assumptionsMap from the currentPath
+            // currentPath will be something like ['compare', '1', 'numeric']
+            // This directly maps to keys like "compare_1_numeric"
+            const assumptionsKey = currentPath.join('_');
+            const assumptions = assumptionsMap[assumptionsKey];
+
+            if (assumptions) {
+                assumptions.forEach((assumption, index) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <label>
+                            <input type="checkbox" class="assumption-checkbox" value="${index}">
+                            ${assumption}
+                        </label>
+                    `;
+                    assumptionsListEl.appendChild(li);
+                });
+            } else {
+                assumptionsListEl.innerHTML = `<li>No specific checklist available for this path. Please proceed based on your general knowledge of parametric assumptions.</li>`;
+            }
+        }
+
+        // Specific logic for predictAssumptionsStep
+        else if (currentStepId === 'predictAssumptionsStep') {
+            const assumptionsListEl = document.getElementById('predictAssumptionsList');
+            assumptionsListEl.innerHTML = ''; // Clear previous assumptions
+
+            const assumptionsKey = currentPath.join('_');
+            const assumptions = predictAssumptionsMap[assumptionsKey];
+
+            if (assumptions) {
+                assumptions.forEach((assumption, index) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <label>
+                            <input type="checkbox" class="assumption-checkbox" value="${index}">
+                            ${assumption}
+                        </label>
+                    `;
+                    assumptionsListEl.appendChild(li);
+                });
+            } else {
+                assumptionsListEl.innerHTML = `<li>No specific checklist available for this path.</li>`;
+            }
+        }
+
+        if (document.getElementById(currentStepId)) {
+            document.getElementById(currentStepId).classList.add('active');
+        }
+
+        const backNav = document.getElementById('backNav');
+        const breadcrumbsContainer = document.getElementById('breadcrumbs'); // Get reference
+        if (breadcrumbsContainer) { // Safety check
+            breadcrumbsContainer.innerHTML = ''; // Clear previous breadcrumbs
+        }
+
+        // Show back button logic
+        if (backNav) {
+            if (historyStack.length > 1) {
+                backNav.style.display = 'block';
+            } else {
+                backNav.style.display = 'none';
+            }
+        }
+
+        // Update Breadcrumbs logic
+        if (breadcrumbsContainer && currentPath.length > 0) { // Only show if choices have been made
+            let breadcrumbHtml = '';
+            currentPath.forEach((answerKey, index) => {
+                const answerText = answerMap[answerKey];
+                if (answerText) {
+                    if (breadcrumbHtml !== '') {
+                        breadcrumbHtml += `<span class="separator"> / </span>`;
+                    }
+                    breadcrumbHtml += `<span>${answerText}</span>`;
+                }
+            });
+            breadcrumbsContainer.innerHTML = breadcrumbHtml;
+            // The breadcrumbs-container is inside backNav, which handles its overall display.
+            // We just ensure it's populated.
+        } else if (breadcrumbsContainer) {
+            breadcrumbsContainer.innerHTML = ''; // Ensure cleared if no path
+        }
+
+
+        const progressBarFill = document.querySelector('.progress-bar-fill');
+        if (progressBarFill) {
+            const progress = progressMap[currentStepId] || 0;
+            progressBarFill.style.width = `${progress}%`;
+        }
+    }
+
+    function copyInterpretation() {
+        const textarea = document.getElementById('interpretationText');
+        textarea.select();
+        document.execCommand('copy');
+        alert('Interpretation text copied to clipboard!');
+    }
+
+    function exportResults() {
+        const testInfo = statisticalTestMap[currentPath.join('_')];
+        if (!testInfo) return;
+
+        let history = 'Your Selection Path:\n';
+        for (let i = 0; i < currentPath.length; i++) {
+            const questionStepId = historyStack[i + 1];
+            const question = questionMap[questionStepId];
+            const answerKey = currentPath[i];
+            const answer = answerMap[answerKey];
+            if (question && answer) {
+                history += `${i + 1}. ${question}: ${answer}\n`;
+            }
+        }
+        history += '\n--------------------\n\n';
+
+        let content = history;
+        content += `Recommended Test:\n${testInfo.name}\n\n`;
+        content += `SPSS Guide:\n${testInfo.link}\n\n`;
+        if (testInfo.interpretation) {
+            content += `APA Interpretation Guide:\n${testInfo.interpretation}\n\n`;
+        }
+        content += '--------------------\n\n';
+        content += 'Message from the Creator:\n';
+        content += 'Dear user,\n';
+        content += 'Thank you for using StatSelector! This tool was created to simplify the process of choosing the right statistical test for your research. I hope it proves useful in your academic and professional endeavors.\n';
+        content += 'If you encounter any issues or have suggestions for improvement, please do not hesitate to reach out to me at meradiosjohnkennetht200297@gmail.com.\n';
+        content += 'Best regards,\n';
+        content += 'John Kenneth T. Meradios\n\n';
+
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'StatSelector_Results.txt';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    function handleAssumptionsCheck() {
+        const checkboxes = document.querySelectorAll('#assumptionsList .assumption-checkbox');
+        let allAssumptionsMet = true;
+
+        checkboxes.forEach(checkbox => {
+            if (!checkbox.checked) {
+                allAssumptionsMet = false;
+            }
+        });
+
+        if (allAssumptionsMet) {
+            handleFinal('yes'); // All assumptions met, proceed with parametric
+        } else {
+            handleFinal('no');  // One or more assumptions not met, proceed with non-parametric
+        }
+    }
+
+    function handlePredictAssumptionsCheck() {
+        const checkboxes = document.querySelectorAll('#predictAssumptionsList .assumption-checkbox');
+        let allAssumptionsMet = true;
+
+        if (checkboxes.length === 0) { // Handle case where checklist wasn't populated
+            allAssumptionsMet = false; // Default to not met if there's no checklist
+        }
+
+        checkboxes.forEach(checkbox => {
+            if (!checkbox.checked) {
+                allAssumptionsMet = false;
+            }
+        });
+
+        if (allAssumptionsMet) {
+            handleFinal('assumptions_met'); // All assumptions met, proceed to show result
+        } else {
+            historyStack.push('alternativeNeededStep'); // One or more assumptions not met
+            updateUI();
+        }
+    }
+
+    function resetWizard() {
+        location.reload();
+    }
+
+    // --- Dark Mode Logic ---
+    const themeToggle = document.getElementById('themeToggle');
+    const body = document.body;
+
+    // Apply saved theme on load
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+        body.classList.add('dark-mode');
+        if (themeToggle) themeToggle.textContent = '☀️'; // Sun icon for light mode
+        if (themeToggle) themeToggle.setAttribute('aria-label', 'Toggle light mode');
+    } else {
+        if (themeToggle) themeToggle.textContent = '🌙'; // Moon icon for dark mode
+        if (themeToggle) themeToggle.setAttribute('aria-label', 'Toggle dark mode');
+    }
+
+    // Toggle theme on button click
+    if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+            if (body.classList.contains('dark-mode')) {
+                localStorage.setItem('theme', 'dark');
+                themeToggle.textContent = '☀️';
+                themeToggle.setAttribute('aria-label', 'Toggle light mode');
+            } else {
+                localStorage.setItem('theme', 'light');
+                themeToggle.textContent = '🌙';
+                themeToggle.setAttribute('aria-label', 'Toggle dark mode');
+            }
+        });
+    }
+</script>
+
+</body>
+</html>
