@@ -146,7 +146,6 @@ input:focus, textarea:focus, select:focus { border-color: var(--primary); outlin
 
 <header>
     <h1>🎓 ELJMC Stat Cert Generator</h1>
-    <p class="subtitle">Format: Courier New • Letter • Double Spaced</p>
 </header>
 
 <div class="main-layout">
@@ -213,6 +212,13 @@ input:focus, textarea:focus, select:focus { border-color: var(--primary); outlin
 
     <div class="form-group">
         <label>Analyst Name (Signatory)</label>
+        <select id="analystHelper" onchange="fillAnalyst()" style="margin-bottom: 10px;">
+            <option value="" disabled selected>-- Quick Select Analyst --</option>
+            <option value="John Kenneth Meradios">John Kenneth Meradios</option>
+            <option value="Elmer Procina">Elmer Procina</option>
+            <option value="Rexie May Morales">Rexie May Morales</option>
+            <option value="Airrah Lacanaria">Airrah Lacanaria</option>
+        </select>
         <input type="text" id="analystName" placeholder="John Kenneth Meradios" oninput="saveSettings()">
     </div>
 
@@ -246,6 +252,11 @@ window.onload = function() {
 
 function fillDegree() {
     document.getElementById("degree").value = document.getElementById("degreeHelper").value;
+}
+
+function fillAnalyst() {
+    document.getElementById("analystName").value = document.getElementById("analystHelper").value;
+    saveSettings();
 }
 
 function saveSettings() {
