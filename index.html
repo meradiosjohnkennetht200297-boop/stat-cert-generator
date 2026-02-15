@@ -1,427 +1,398 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ELJMC Stat Cert Generator</title>
-    
-    <!-- 1. Library for Word Docs -->
-    <script src="https://unpkg.com/docx@7.1.0/build/index.js"></script>
-    <!-- 2. Library for Saving Files -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-    <!-- 3. Library for PDF Generation -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ELJMC Stat Cert Generator</title>
 
-    <!-- Google Font for UI -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<!-- Libraries -->
+<script src="https://unpkg.com/docx@7.1.0/build/index.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-    <style>
-        :root {
-            --primary: #059669; 
-            --primary-hover: #047857;
-            --danger: #dc2626;
-            --danger-hover: #b91c1c;
-            --bg: #f3f4f6;
-            --card-bg: #ffffff;
-            --text-main: #1f2937;
-            --text-muted: #6b7280;
-            --border: #e5e7eb;
-        }
+<!-- Google Font -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg);
-            color: var(--text-main);
-            margin: 0;
-            padding: 20px;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+<style>
+:root {
+    --primary: #059669;
+    --primary-hover: #047857;
+    --danger: #dc2626;
+    --danger-hover: #b91c1c;
+    --bg: #f3f4f6;
+    --card-bg: #ffffff;
+    --text-main: #1f2937;
+    --text-muted: #6b7280;
+    --border: #e5e7eb;
+}
 
-        header {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg);
+    color: var(--text-main);
+    margin: 0;
+    padding: 20px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
 
-        h1 {
-            font-size: 1.5rem;
-            margin: 0;
-            color: var(--text-main);
-        }
+header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
 
-        p.subtitle {
-            color: var(--text-muted);
-            margin-top: 0.5rem;
-            font-size: 0.9rem;
-        }
+h1 { font-size: 1.5rem; margin: 0; }
+p.subtitle { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem; }
 
-        .main-layout {
-            display: grid;
-            grid-template-columns: 1fr 1fr; /* Split screen on desktop */
-            gap: 20px;
-            width: 100%;
-            max-width: 950px;
-        }
+.main-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    width: 100%;
+    max-width: 950px;
+}
 
-        .card {
-            background: var(--card-bg);
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            display: flex;
-            flex-direction: column;
-        }
+.card {
+    background: var(--card-bg);
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+}
 
-        .section-header {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--text-muted);
-            font-weight: 800;
-            margin-bottom: 1.5rem;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 0.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+.section-header {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    font-weight: 800;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
 
-        .form-group {
-            margin-bottom: 1.25rem;
-        }
+.form-group { margin-bottom: 1.25rem; }
 
-        label {
-            display: block;
-            margin-bottom: 0.4rem;
-            font-weight: 600;
-            font-size: 0.9rem;
-            color: var(--text-main);
-        }
+label { display: block; margin-bottom: 0.4rem; font-weight: 600; font-size: 0.9rem; }
 
-        select {
-            width: 100%;
-            padding: 0.5rem;
-            margin-bottom: 0.5rem;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            background-color: #f8fafc;
-            font-size: 0.9rem;
-            cursor: pointer;
-        }
+select, input, textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+    transition: all 0.2s;
+}
 
-        input, textarea {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            font-family: inherit;
-            font-size: 0.95rem;
-            box-sizing: border-box;
-            transition: all 0.2s;
-        }
+input:focus, textarea:focus, select:focus { border-color: var(--primary); outline: 2px solid #a7f3d0; }
 
-        input:focus, textarea:focus {
-            border-color: var(--primary);
-            outline: 2px solid #a7f3d0;
-        }
+.button-group {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
 
-        .button-group {
-            margin-top: auto;
-            display: flex;
-            gap: 10px;
-            flex-direction: column;
-        }
+.btn-primary {
+    background-color: var(--primary);
+    color: white;
+    padding: 1rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+}
+.btn-primary:hover { background-color: var(--primary-hover); }
 
-        .btn-primary {
-            background-color: var(--primary);
-            color: white;
-            padding: 1rem;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            width: 100%;
-            transition: background 0.2s;
-        }
+.btn-danger {
+    background-color: var(--danger);
+    color: white;
+    padding: 1rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+}
+.btn-danger:hover { background-color: var(--danger-hover); }
 
-        .btn-primary:hover {
-            background-color: var(--primary-hover);
-        }
+.btn-secondary {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    cursor: pointer;
+}
+.btn-secondary:hover { background: #f9fafb; color: var(--text-main); }
 
-        .btn-danger {
-            background-color: var(--danger);
-            color: white;
-            padding: 1rem;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            width: 100%;
-            transition: background 0.2s;
-        }
+.badge { background-color: #d1fae5; color: #065f46; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; margin-left: 8px; font-weight: normal; }
 
-        .btn-danger:hover {
-            background-color: var(--danger-hover);
-        }
-
-        .btn-secondary {
-            background: transparent;
-            color: var(--text-muted);
-            border: 1px solid var(--border);
-            padding: 0.4rem 0.8rem;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            cursor: pointer;
-        }
-        
-        .btn-secondary:hover {
-            background: #f9fafb;
-            color: var(--text-main);
-        }
-
-        .badge {
-            background-color: #d1fae5;
-            color: #065f46;
-            font-size: 0.7rem;
-            padding: 2px 6px;
-            border-radius: 4px;
-            margin-left: 8px;
-            font-weight: normal;
-        }
-
-        @media (max-width: 768px) {
-            .main-layout {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+@media (max-width: 768px) { .main-layout { grid-template-columns: 1fr; } }
+</style>
 </head>
+
 <body>
 
-    <header>
-        <h1>ELJMC Stat Cert Generator</h1>
-    </header>
+<header>
+    <h1>🎓 ELJMC Stat Cert Generator</h1>
+    <p class="subtitle">Format: Courier New • Letter • Double Spaced</p>
+</header>
 
-    <div class="main-layout">
-        
-        <!-- LEFT COLUMN: CLIENT DATA -->
-        <div class="card">
-            <div class="section-header">
-                Client Information
-                <button class="btn-secondary" onclick="clearClientForm()">Reset Form</button>
-            </div>
+<div class="main-layout">
 
-            <div class="form-group">
-                <label>Thesis Title <span class="badge">Auto-Caps</span></label>
-                <textarea id="thesisTitle" rows="3" placeholder="Enter the complete thesis title..."></textarea>
-            </div>
-
-            <div class="form-group">
-                <label>Researchers</label>
-                <textarea id="researchers" rows="5" placeholder="Name 1&#10;Name 2&#10;Name 3"></textarea>
-                <p style="font-size: 0.75rem; color: #9ca3af; margin-top: 4px;">Enter one name per line.</p>
-            </div>
-
-            <div class="form-group">
-                <label>Degree Program</label>
-                <select id="degreeHelper" onchange="fillDegree()">
-                    <option value="" disabled selected>-- Quick Select Degree --</option>
-                    
-                    <optgroup label="Teacher Education (BEED / BSED)">
-                        <option value="Bachelor of Elementary Education">BEED (Elementary Education)</option>
-                        <option value="Bachelor of Secondary Education Major in Mathematics">BSED Math</option>
-                        <option value="Bachelor of Secondary Education Major in Science">BSED Science</option>
-                        <option value="Bachelor of Secondary Education Major in Filipino">BSED Filipino</option>
-                        <option value="Bachelor of Secondary Education Major in English">BSED English</option>
-                    </optgroup>
-                    
-                    <optgroup label="Business Administration (BSBA)">
-                        <option value="Bachelor of Science in Business Administration Major in Marketing Management">BSBA Marketing</option>
-                        <option value="Bachelor of Science in Business Administration Major in Financial Management">BSBA Financial Mgt</option>
-                        <option value="Bachelor of Science in Business Administration Major in Human Resource Management">BSBA HRM</option>
-                    </optgroup>
-
-                    <optgroup label="Accountancy">
-                        <option value="Bachelor of Science in Accountancy">BSA (Accountancy)</option>
-                        <option value="Bachelor of Science in Accounting Information Systems">BSAIS</option>
-                    </optgroup>
-                </select>
-                <input type="text" id="degree" placeholder="Select above or type manually...">
-            </div>
-
-            <div class="form-group">
-                <label>Date of Issuance</label>
-                <input type="date" id="dateIssued">
-            </div>
-        </div>
-
-        <!-- RIGHT COLUMN: ANALYST SETTINGS -->
-        <div class="card">
-            <div class="section-header">
-                Analyst & School Settings
-                <span style="font-size: 0.7rem; font-weight: normal; color: #059669;">● Auto-Saved</span>
-            </div>
-
-            <div class="form-group">
-                <label>School / Institution</label>
-                <input type="text" id="school" value="Eduardo L. Joson Memorial College" oninput="saveSettings()">
-            </div>
-
-            <div class="form-group">
-                <label>Analyst Name (Signatory)</label>
-                
-                <!-- Quick Select for Analyst -->
-                <select id="analystHelper" onchange="fillAnalyst()">
-                    <option value="" disabled selected>-- Quick Select Analyst --</option>
-                    <option value="John Kenneth T. Meradios">John Kenneth T. Meradios</option>
-                    <option value="Elmer Procina">Elmer Procina</option>
-                    <option value="Rexie May Morales">Rexie May Morales</option>
-                    <option value="Airrah Lacanaria">Airrah Lacanaria</option>
-                </select>
-
-                <input type="text" id="analystName" placeholder="Type name or select above..." oninput="saveSettings()">
-            </div>
-
-            <div class="form-group">
-                <label>Job Title / Position</label>
-                <input type="text" id="analystTitle" placeholder="Statistical Analyst" oninput="saveSettings()">
-            </div>
-
-            <div class="button-group">
-                <button class="btn-primary" onclick="generateWordDoc()">
-                    Download Word Document (.docx)
-                </button>
-                <button class="btn-danger" onclick="generatePDF()">
-                    Download PDF Document (.pdf)
-                </button>
-            </div>
-        </div>
-
+<!-- LEFT COLUMN -->
+<div class="card">
+    <div class="section-header">
+        Client Information
+        <button class="btn-secondary" onclick="clearClientForm()">Reset Form</button>
     </div>
 
+    <div class="form-group">
+        <label>Thesis Title <span class="badge">Auto-Caps</span></label>
+        <textarea id="thesisTitle" rows="3" placeholder="Enter the complete thesis title..."></textarea>
+    </div>
+
+    <div class="form-group">
+        <label>Researchers</label>
+        <textarea id="researchers" rows="5" placeholder="Name 1&#10;Name 2&#10;Name 3"></textarea>
+        <p style="font-size:0.75rem; color:#9ca3af;">Enter one name per line.</p>
+    </div>
+
+    <div class="form-group">
+        <label>Degree Program</label>
+        <select id="degreeHelper" onchange="fillDegree()">
+            <option value="" disabled selected>-- Quick Select Degree --</option>
+            <optgroup label="Teacher Education (BEED / BSED)">
+                <option value="Bachelor of Elementary Education">BEED (Elementary Education)</option>
+                <option value="Bachelor of Secondary Education Major in Mathematics">BSED Math</option>
+                <option value="Bachelor of Secondary Education Major in Science">BSED Science</option>
+                <option value="Bachelor of Secondary Education Major in Filipino">BSED Filipino</option>
+                <option value="Bachelor of Secondary Education Major in English">BSED English</option>
+            </optgroup>
+            <optgroup label="Business Administration (BSBA)">
+                <option value="Bachelor of Science in Business Administration Major in Marketing Management">BSBA Marketing</option>
+                <option value="Bachelor of Science in Business Administration Major in Financial Management">BSBA Financial Mgt</option>
+                <option value="Bachelor of Science in Business Administration Major in Human Resource Management">BSBA HRM</option>
+            </optgroup>
+            <optgroup label="Accountancy">
+                <option value="Bachelor of Science in Accountancy">BSA (Accountancy)</option>
+                <option value="Bachelor of Science in Accounting Information Systems">BSAIS</option>
+            </optgroup>
+        </select>
+        <input type="text" id="degree" placeholder="Select above or type manually...">
+    </div>
+
+    <div class="form-group">
+        <label>Date of Issuance</label>
+        <input type="date" id="dateIssued">
+    </div>
+</div>
+
+<!-- RIGHT COLUMN -->
+<div class="card">
+    <div class="section-header">
+        Analyst & School Settings
+        <span style="font-size:0.7rem; font-weight: normal; color:#059669;">● Auto-Saved</span>
+    </div>
+
+    <div class="form-group">
+        <label>School / Institution</label>
+        <input type="text" id="school" value="Eduardo L. Joson Memorial College" oninput="saveSettings()">
+    </div>
+
+    <div class="form-group">
+        <label>Analyst Name (Signatory)</label>
+        <input type="text" id="analystName" placeholder="John Kenneth Meradios" oninput="saveSettings()">
+    </div>
+
+    <div class="form-group">
+        <label>Job Title / Position</label>
+        <input type="text" id="analystTitle" placeholder="Statistical Analyst" oninput="saveSettings()">
+    </div>
+
+    <div class="button-group">
+        <button class="btn-primary" onclick="generateWordDoc()">Download Word Document (.docx)</button>
+        <button class="btn-danger" onclick="generatePDF()">Download PDF Document (.pdf)</button>
+    </div>
+</div>
+
+</div>
+
 <script>
-    const defaults = {
-        analystName: "John Kenneth T. Meradios",
-        analystTitle: "Statistical Analyst",
-        school: "Eduardo L. Joson Memorial College"
-    };
+const defaults = {
+    analystName: "John Kenneth Meradios",
+    analystTitle: "Statistical Analyst",
+    school: "Eduardo L. Joson Memorial College"
+};
 
-    window.onload = function() {
-        document.getElementById('dateIssued').valueAsDate = new Date();
-        document.getElementById('analystName').value = localStorage.getItem('statCert_name') || defaults.analystName;
-        document.getElementById('analystTitle').value = localStorage.getItem('statCert_title') || defaults.analystTitle;
-        const savedSchool = localStorage.getItem('statCert_school');
-        document.getElementById('school').value = savedSchool ? savedSchool : defaults.school;
-    };
+window.onload = function() {
+    document.getElementById('dateIssued').valueAsDate = new Date();
+    document.getElementById('analystName').value = localStorage.getItem('statCert_name') || defaults.analystName;
+    document.getElementById('analystTitle').value = localStorage.getItem('statCert_title') || defaults.analystTitle;
+    const savedSchool = localStorage.getItem('statCert_school');
+    document.getElementById('school').value = savedSchool || defaults.school;
+};
 
-    function fillDegree() {
-        document.getElementById("degree").value = document.getElementById("degreeHelper").value;
+function fillDegree() {
+    document.getElementById("degree").value = document.getElementById("degreeHelper").value;
+}
+
+function saveSettings() {
+    localStorage.setItem('statCert_name', document.getElementById('analystName').value);
+    localStorage.setItem('statCert_title', document.getElementById('analystTitle').value);
+    localStorage.setItem('statCert_school', document.getElementById('school').value);
+}
+
+function clearClientForm() {
+    document.getElementById('thesisTitle').value = '';
+    document.getElementById('researchers').value = '';
+    document.getElementById('degree').value = '';
+    document.getElementById('degreeHelper').selectedIndex = 0;
+    document.getElementById('dateIssued').valueAsDate = new Date();
+}
+
+function getFormData() {
+    const title = document.getElementById('thesisTitle').value.toUpperCase();
+    const researchersRaw = document.getElementById('researchers').value;
+    const degree = document.getElementById('degree').value;
+    const school = document.getElementById('school').value;
+    const dateRaw = document.getElementById('dateIssued').value;
+    const analystName = document.getElementById('analystName').value.toUpperCase();
+    const analystTitle = document.getElementById('analystTitle').value;
+
+    if(!title || !researchersRaw || !degree) {
+        alert("Please fill in Thesis Title, Researchers, and Degree.");
+        return null;
     }
 
-    function fillAnalyst() {
-        // Copies selected name into the input field
-        const selectBox = document.getElementById("analystHelper");
-        const inputBox = document.getElementById("analystName");
-        inputBox.value = selectBox.value;
-        saveSettings(); // Auto-save selection
-    }
+    const dateObj = new Date(dateRaw);
+    const dateStr = dateObj.toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+    const researcherLines = researchersRaw.split('\n').filter(r => r.trim() !== '');
+    const safeName = researcherLines[0] ? researcherLines[0].replace(/[^a-z0-9]/gi,'_').trim() : "Client";
 
-    function saveSettings() {
-        localStorage.setItem('statCert_name', document.getElementById('analystName').value);
-        localStorage.setItem('statCert_title', document.getElementById('analystTitle').value);
-        localStorage.setItem('statCert_school', document.getElementById('school').value);
-    }
+    return { title, researcherLines, degree, school, dateStr, analystName, analystTitle, safeName };
+}
 
-    function clearClientForm() {
-        document.getElementById('thesisTitle').value = '';
-        document.getElementById('researchers').value = '';
-        document.getElementById('degree').value = '';
-        document.getElementById('degreeHelper').selectedIndex = 0;
-        document.getElementById('dateIssued').valueAsDate = new Date();
-    }
+// WORD GENERATION
+function generateWordDoc() {
+    const data = getFormData();
+    if(!data) return;
 
-    function getFormData() {
-        const title = document.getElementById('thesisTitle').value.toUpperCase();
-        const researchersRaw = document.getElementById('researchers').value;
-        const degree = document.getElementById('degree').value;
-        const school = document.getElementById('school').value;
-        const dateRaw = document.getElementById('dateIssued').value;
-        const analystName = document.getElementById('analystName').value.toUpperCase();
-        const analystTitle = document.getElementById('analystTitle').value;
+    const { Document, Packer, Paragraph, TextRun, AlignmentType } = docx;
 
-        if(!title || !researchersRaw || !degree) {
-            alert("Please fill in Thesis Title, Researchers, and Degree.");
-            return null;
-        }
+    const researcherParagraphs = data.researcherLines.map(name => 
+        new Paragraph({
+            alignment: AlignmentType.LEFT,
+            children: [new TextRun({ text: name.trim(), bold:true, font:"Courier New", size:24 })],
+            indent: { left:720 },
+            spacing: { line:480 }
+        })
+    );
 
-        const dateObj = new Date(dateRaw);
-        const dateStr = dateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-        const researcherLines = researchersRaw.split('\n').filter(r => r.trim() !== '');
-        const safeName = researcherLines[0] ? researcherLines[0].replace(/[^a-z0-9]/gi, '_').trim() : "Client";
+    const doc = new Document({
+        sections: [{
+            properties: { page: { size:{ width:12240, height:15840 }, margin:{ top:1440,right:1440,bottom:1440,left:2160 } } },
+            children: [
+                new Paragraph({ alignment: AlignmentType.CENTER, spacing:{ after:400, line:360 }, children:[new TextRun({ text:"STATISTICAL ANALYST’S CERTIFICATION", bold:true, font:"Courier New", size:32 })] }),
+                new Paragraph({ alignment: AlignmentType.JUSTIFIED, spacing:{ after:200, line:480 }, children:[new TextRun({ text:"This is to certify that the undersigned statistically analyzed the thesis entitled:", font:"Courier New", size:24 })] }),
+                new Paragraph({ alignment: AlignmentType.CENTER, spacing:{ after:300, line:480 }, children:[new TextRun({ text:data.title, bold:true, font:"Courier New", size:24 })] }),
+                new Paragraph({ alignment: AlignmentType.LEFT, spacing:{ after:100, line:480 }, children:[new TextRun({ text:"Prepared and submitted by:", font:"Courier New", size:24 })] }),
+                ...researcherParagraphs,
+                new Paragraph({ alignment: AlignmentType.JUSTIFIED, spacing:{ before:200, after:200, line:480 }, children:[new TextRun({ text:`In partial fulfillment of the requirements for the degree of ${data.degree} at ${data.school}.`, font:"Courier New", size:24 })] }),
+                new Paragraph({ alignment: AlignmentType.JUSTIFIED, spacing:{ after:800, line:480 }, children:[new TextRun({ text:`This certification is issued on ${data.dateStr}, upon the request of the researchers for documentation purposes.`, font:"Courier New", size:24 })] }),
+                new Paragraph({ alignment: AlignmentType.CENTER, spacing:{ line:240 }, children:[new TextRun({ text:"_______________________________", font:"Courier New", size:24 })] }),
+                new Paragraph({ alignment: AlignmentType.CENTER, spacing:{ line:240 }, children:[new TextRun({ text:data.analystName, bold:true, font:"Courier New", size:24 })] }),
+                new Paragraph({ alignment: AlignmentType.CENTER, spacing:{ line:240 }, children:[new TextRun({ text:data.analystTitle, font:"Courier New", size:24 })] }),
+            ]
+        }]
+    });
 
-        return { title, researcherLines, degree, school, dateStr, analystName, analystTitle, safeName };
-    }
+    Packer.toBlob(doc).then(blob => saveAs(blob, `Certification_${data.safeName}.docx`));
+}
 
-    // --- WORD GENERATION ---
-    function generateWordDoc() {
-        const data = getFormData();
-        if(!data) return;
+// PDF GENERATION
+async function generatePDF() {
+    const data = getFormData();
+    if(!data) return;
 
-        const { Document, Packer, Paragraph, TextRun, AlignmentType } = docx;
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit:"in", format:"letter" });
+    doc.setFont("courier");
 
-        const researcherParagraphs = data.researcherLines.map(name => {
-            return new Paragraph({
-                alignment: AlignmentType.LEFT,
-                children: [new TextRun({ text: name.trim(), bold: true, font: "Courier New", size: 24 })],
-                indent: { left: 720 }, 
-                spacing: { line: 480 }, 
-            });
-        });
+    const marginLeft = 1.5, marginRight = 1.0, marginTop = 1.0;
+    const printableWidth = 8.5 - marginLeft - marginRight;
+    const lineHeight = 0.35;
+    let cursorY = marginTop;
 
-        const doc = new Document({
-            sections: [{
-                properties: {
-                    page: {
-                        size: { width: 12240, height: 15840 }, 
-                        margin: { top: 1440, right: 1440, bottom: 1440, left: 2160 }
-                    }
-                },
-                children: [
-                    new Paragraph({
-                        alignment: AlignmentType.CENTER,
-                        spacing: { after: 400, line: 360 }, 
-                        children: [new TextRun({ text: "STATISTICAL ANALYST’S CERTIFICATION", bold: true, font: "Courier New", size: 32 })],
-                    }),
-                    new Paragraph({
-                        alignment: AlignmentType.JUSTIFIED,
-                        spacing: { after: 200, line: 480 },
-                        children: [new TextRun({ text: "This is to certify that the undersigned statistically analyzed the thesis entitled:", font: "Courier New", size: 24 })],
-                    }),
-                    new Paragraph({
-                        alignment: AlignmentType.CENTER,
-                        spacing: { after: 300, line: 480 },
-                        children: [new TextRun({ text: data.title, bold: true, font: "Courier New", size: 24 })],
-                    }),
-                    new Paragraph({
-                        alignment: AlignmentType.LEFT,
-                        spacing: { after: 100, line: 480 },
-                        children: [new TextRun({ text: "Prepared and submitted by:", font: "Courier New", size: 24 })],
-                    }),
-                    ...researcherParagraphs,
-                    new Paragraph({
-                        alignment: AlignmentType.JUSTIFIED,
-                        spacing: { before: 200, after: 200, line: 480 },
-                        children: [new TextRun({ text: `In partial fulfillment of the requirements for the degree of ${data.degree} at ${data.school}.`, font: "Courier New", size: 24 })],
-                    }),
-                    new Paragraph({
-                        alignment: AlignmentType.JUSTIFIED,
-                        spacing: { after: 800, line: 480 },
-                        children: [new TextRun({ text: `This certification is issued on ${data.dateStr}, upon the request of the researchers for documentation purposes.`, font: "Courier New", size: 24 })],
-                    }),
-                    new Paragraph({
-                        alignment: AlignmentType.CENTER, 
-                        spacing: { line
+    // HEADER
+    doc.setFontSize(16); doc.setFont("courier","bold");
+    const headerLines = doc.splitTextToSize("STATISTICAL ANALYST’S CERTIFICATION", printableWidth);
+    doc.text(headerLines, marginLeft+(printableWidth/2), cursorY, { align:"center" });
+    cursorY += headerLines.length*lineHeight + 0.2;
+
+    // INTRO
+    doc.setFontSize(12); doc.setFont("courier","normal");
+    const introText = "This is to certify that the undersigned statistically analyzed the thesis entitled:";
+    const introLines = doc.splitTextToSize(introText, printableWidth);
+    doc.text(introLines, marginLeft, cursorY, { align:"justify", maxWidth:printableWidth });
+    cursorY += introLines.length*lineHeight + 0.1;
+
+    // TITLE
+    doc.setFont("courier","bold");
+    const titleLines = doc.splitTextToSize(data.title, printableWidth);
+    doc.text(titleLines, marginLeft + (printableWidth/2), cursorY, { align:"center" });
+    cursorY += titleLines.length*lineHeight + 0.2;
+
+    // PREPARED BY
+    doc.setFont("courier","normal");
+    doc.text("Prepared and submitted by:", marginLeft, cursorY);
+    cursorY += lineHeight;
+
+    // RESEARCHERS
+    doc.setFont("courier","bold");
+    data.researcherLines.forEach(name => {
+        doc.text(name.trim(), marginLeft+0.5, cursorY);
+        cursorY += lineHeight;
+    });
+    cursorY += 0.2;
+
+    // FULFILLMENT
+    doc.setFont("courier","normal");
+    const fulfillText = `In partial fulfillment of the requirements for the degree of ${data.degree} at ${data.school}.`;
+    const fulfillLines = doc.splitTextToSize(fulfillText, printableWidth);
+    doc.text(fulfillLines, marginLeft, cursorY, { align:"justify", maxWidth:printableWidth });
+    cursorY += fulfillLines.length*lineHeight + 0.2;
+
+    // DATE
+    const dateText = `This certification is issued on ${data.dateStr}, upon the request of the researchers for documentation purposes.`;
+    const dateLines = doc.splitTextToSize(dateText, printableWidth);
+    doc.text(dateLines, marginLeft, cursorY, { align:"justify", maxWidth:printableWidth });
+
+    // SIGNATURE
+    cursorY += 1.5;
+    if(cursorY > 10) { doc.addPage(); cursorY = 1.0; }
+    doc.text("_______________________________", marginLeft+(printableWidth/2), cursorY, { align:"center" });
+    cursorY += 0.2;
+    doc.setFont("courier","bold");
+    doc.text(data.analystName, marginLeft+(printableWidth/2), cursorY, { align:"center" });
+    cursorY += 0.2;
+    doc.setFont("courier","normal");
+    doc.text(data.analystTitle, marginLeft+(printableWidth/2), cursorY, { align:"center" });
+
+    doc.save(`Certification_${data.safeName}.pdf`);
+}
+</script>
+
+</body>
+</html
