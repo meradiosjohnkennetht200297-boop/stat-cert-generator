@@ -273,7 +273,17 @@
 
             <div class="form-group">
                 <label>Analyst Name (Signatory)</label>
-                <input type="text" id="analystName" placeholder="John T. Kenneth Meradios" oninput="saveSettings()">
+                
+                <!-- Quick Select for Analyst -->
+                <select id="analystHelper" onchange="fillAnalyst()">
+                    <option value="" disabled selected>-- Quick Select Analyst --</option>
+                    <option value="John Kenneth T. Meradios">John Kenneth T. Meradios</option>
+                    <option value="Elmer Procina">Elmer Procina</option>
+                    <option value="Rexie May Morales">Rexie May Morales</option>
+                    <option value="Airrah Lacanaria">Airrah Lacanaria</option>
+                </select>
+
+                <input type="text" id="analystName" placeholder="Type name or select above..." oninput="saveSettings()">
             </div>
 
             <div class="form-group">
@@ -310,6 +320,14 @@
 
     function fillDegree() {
         document.getElementById("degree").value = document.getElementById("degreeHelper").value;
+    }
+
+    function fillAnalyst() {
+        // Copies selected name into the input field
+        const selectBox = document.getElementById("analystHelper");
+        const inputBox = document.getElementById("analystName");
+        inputBox.value = selectBox.value;
+        saveSettings(); // Auto-save selection
     }
 
     function saveSettings() {
@@ -406,128 +424,4 @@
                     }),
                     new Paragraph({
                         alignment: AlignmentType.CENTER, 
-                        spacing: { line: 240 },
-                        children: [new TextRun({ text: "_______________________________", font: "Courier New", size: 24 })],
-                    }),
-                    new Paragraph({
-                        alignment: AlignmentType.CENTER, 
-                        spacing: { line: 240 },
-                        children: [new TextRun({ text: data.analystName, bold: true, font: "Courier New", size: 24 })],
-                    }),
-                    new Paragraph({
-                        alignment: AlignmentType.CENTER,
-                        spacing: { line: 240 },
-                        children: [new TextRun({ text: data.analystTitle, font: "Courier New", size: 24 })],
-                    }),
-                ],
-            }],
-        });
-
-        Packer.toBlob(doc).then((blob) => {
-            saveAs(blob, `Certification_${data.safeName}.docx`);
-        });
-    }
-
-    // --- PDF GENERATION ---
-    async function generatePDF() {
-        const data = getFormData();
-        if(!data) return;
-
-        const { jsPDF } = window.jspdf;
-        // Letter size (8.5 x 11 inches)
-        const doc = new jsPDF({ unit: "in", format: "letter" });
-        doc.setFont("courier"); // Sets Courier Font
-
-        // Margins (Inches)
-        const marginLeft = 1.5;
-        const marginRight = 1.0;
-        const marginTop = 1.0;
-        const printableWidth = 8.5 - marginLeft - marginRight;
-        
-        // Helper to center text
-        const centerText = (text, y) => {
-            doc.text(text, marginLeft + (printableWidth / 2), y, { align: "center" });
-        };
-
-        // Helper for Justified Text (Approximated via splitting)
-        // jsPDF justify is tricky, so we use splitTextToSize + Left Align for cleanest Courier look
-        // unless we strictly want justified (which often creates ugly gaps in monospaced fonts).
-        // I will use Left Align for monospaced strictly, or 'justify' via maxWidth options if preferred.
-        // For Certificates, Left Aligned blocks look cleaner in Courier than forced Justify.
-        // However, I will use maxWidth to ensure wrapping.
-        
-        let cursorY = marginTop;
-        const lineHeight = 0.35; // Approx Double Spacing for 12pt font
-
-        // 1. HEADER
-        doc.setFontSize(16);
-        doc.setFont("courier", "bold");
-        // Split header if too long
-        const headerLines = doc.splitTextToSize("STATISTICAL ANALYST’S CERTIFICATION", printableWidth);
-        doc.text(headerLines, marginLeft + (printableWidth / 2), cursorY, { align: "center" });
-        cursorY += (headerLines.length * lineHeight) + 0.2;
-
-        // 2. INTRO
-        doc.setFontSize(12);
-        doc.setFont("courier", "normal");
-        const introText = "This is to certify that the undersigned statistically analyzed the thesis entitled:";
-        const introLines = doc.splitTextToSize(introText, printableWidth);
-        doc.text(introLines, marginLeft, cursorY, { align: "justify", maxWidth: printableWidth });
-        cursorY += (introLines.length * lineHeight) + 0.1;
-
-        // 3. TITLE
-        doc.setFont("courier", "bold");
-        const titleLines = doc.splitTextToSize(data.title, printableWidth);
-        doc.text(titleLines, marginLeft + (printableWidth / 2), cursorY, { align: "center" });
-        cursorY += (titleLines.length * lineHeight) + 0.2;
-
-        // 4. PREPARED BY
-        doc.setFont("courier", "normal");
-        doc.text("Prepared and submitted by:", marginLeft, cursorY);
-        cursorY += lineHeight;
-
-        // 5. RESEARCHERS
-        doc.setFont("courier", "bold");
-        data.researcherLines.forEach(name => {
-            doc.text(name.trim(), marginLeft + 0.5, cursorY); // 0.5 indent
-            cursorY += lineHeight;
-        });
-        cursorY += 0.2;
-
-        // 6. FULFILLMENT
-        doc.setFont("courier", "normal");
-        const fulfillText = `In partial fulfillment of the requirements for the degree of ${data.degree} at ${data.school}.`;
-        const fulfillLines = doc.splitTextToSize(fulfillText, printableWidth);
-        doc.text(fulfillLines, marginLeft, cursorY, { align: "justify", maxWidth: printableWidth });
-        cursorY += (fulfillLines.length * lineHeight) + 0.2;
-
-        // 7. DATE
-        const dateText = `This certification is issued on ${data.dateStr}, upon the request of the researchers for documentation purposes.`;
-        const dateLines = doc.splitTextToSize(dateText, printableWidth);
-        doc.text(dateLines, marginLeft, cursorY, { align: "justify", maxWidth: printableWidth });
-        
-        // 8. SIGNATURE
-        // Move to bottom or fixed position relative to cursor? 
-        // Let's ensure space.
-        cursorY += 1.5; 
-        
-        // Check page bounds, add page if needed
-        if(cursorY > 10) { doc.addPage(); cursorY = 1.0; }
-
-        doc.text("_______________________________", marginLeft + (printableWidth / 2), cursorY, { align: "center" });
-        cursorY += 0.2;
-
-        doc.setFont("courier", "bold");
-        doc.text(data.analystName, marginLeft + (printableWidth / 2), cursorY, { align: "center" });
-        cursorY += 0.2;
-
-        doc.setFont("courier", "normal");
-        doc.text(data.analystTitle, marginLeft + (printableWidth / 2), cursorY, { align: "center" });
-
-        // Save
-        doc.save(`Certification_${data.safeName}.pdf`);
-    }
-</script>
-
-</body>
-</html>
+                        spacing: { line
